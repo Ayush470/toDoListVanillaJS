@@ -9,14 +9,16 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
+
 <body>
     <form>
-        <label for="task"></label>
+        <label for="task">Enter Task: </label>
         <input type="text" id="task" name="toDo">
         <button type="button" id="add">+</button>
     </form>
-    <form id="listOfToDo">
-        <!-- <div class="toDoDiv" id="toDoListCounter">
+
+    <!-- <form id="listOfToDo">
+        <div class="toDoDiv" id="toDoListCounter">
             <label for="box"></label>
             <input type="checkbox" name="toDoListItemCheckbox" class="itemCheckbox" id="box">
 
@@ -34,96 +36,116 @@
             <button class="delete-btn" type="button">
                 <i class="fa-solid fa-trash"></i> Delete
             </button>
-        </div> -->
-    </form>
+        </div>
+    </form> -->
+    <ol id="listOfToDo">
+        <!-- <li class="toDoList" id="toDoListCounter">
+            <label for="box"></label>
+            <input type="checkbox" name="toDoListItemCheckbox" class="itemCheckbox" id="boxCounter">
+
+            <label for="contentToDo"></label>
+            <input type="text" name="contentOfToDo" class="itemContent" id="contentToDoCounter">
+
+            <button class="update-btn" type="button" id="update-btnCounter">
+                <i class="fa-solid fa-pen"></i> Update
+            </button>
+
+            <button class="delete-btn" type="button" id="delete-btnCounter">
+                <i class="fa-solid fa-trash"></i> Delete
+            </button>
+        </li> -->
+    </ol>
     <script>
         document.getElementById("add").addEventListener("click", addToDo);
         let todoCounter = 0;
         function addToDo() {
             const newTask = document.getElementById("task").value;
-            document.getElementById("task").value = "";
+            if (newTask !== "") {
+                document.getElementById("task").value = "";
 
-            const labl1 = document.createElement("label");
-            labl1.setAttribute("for", "box")
+                const labl1 = document.createElement("label");
+                labl1.setAttribute("for", "box-" + todoCounter);
 
-            const inpt1 = document.createElement("input");
-            inpt1.setAttribute("type", "checkbox");
-            inpt1.setAttribute("name", "toDoListItemCheckbox");
-            inpt1.setAttribute("class", "itemCheckbox");
-            inpt1.setAttribute("id", "box");
+                const inpt1 = document.createElement("input");
+                inpt1.setAttribute("type", "checkbox");
+                inpt1.setAttribute("name", "toDoListItemCheckbox");
+                inpt1.setAttribute("class", "itemCheckbox");
+                inpt1.setAttribute("id", "box-" + todoCounter);
 
-            const labl2 = document.createElement("label");
-            labl2.setAttribute("for", "contentToDo")
+                const labl2 = document.createElement("label");
+                labl2.setAttribute("for", "contentToDo-" + todoCounter);
 
-            const inpt2 = document.createElement("input")
-            inpt2.setAttribute("type", "text");
-            inpt2.setAttribute("name", "contentOfToDo");
-            inpt2.setAttribute("class", "itemContent");
-            inpt2.setAttribute("id", "contentToDo");
-            inpt2.setAttribute("value", newTask);
-            inpt2.readOnly = true;
-
-            const updateIcon = document.createElement("i");
-            updateIcon.className = "fa-solid fa-pen";
-
-            const updateBtn = document.createElement("button");
-            updateBtn.className = "update-btn";
-            updateBtn.id = "update-btn-" + todoCounter;
-            updateBtn.type = "button";
-            updateBtn.addEventListener("click", updateFunction);
-            updateBtn.appendChild(updateIcon);
-            updateBtn.appendChild(document.createTextNode(" Update"));
-
-            const saveIcon = document.createElement("i");
-            saveIcon.className = "fa-solid fa-floppy-disk";
-
-            const saveBtn = document.createElement("button");
-            saveBtn.className = "save-btn";
-            saveBtn.id = "save-btn-" + todoCounter;
-            saveBtn.type = "button";
-            saveBtn.addEventListener("click", saveFunction);
-            saveBtn.appendChild(saveIcon);
-            saveBtn.appendChild(document.createTextNode(" Save"));
-
-
-            const icon = document.createElement("i");
-            icon.className = "fa-solid fa-trash";
-
-            const deleteBtn = document.createElement("button");
-            deleteBtn.className = "delete-btn";
-            deleteBtn.id = "delete-btn-" + todoCounter;
-            deleteBtn.type = "button";
-            deleteBtn.addEventListener("click", deletelistitem)
-            deleteBtn.appendChild(icon);
-            deleteBtn.appendChild(document.createTextNode("Delete"));
-
-
-            const toDoListDiv = document.createElement("div");
-            toDoListDiv.className = "toDoDiv";
-            toDoListDiv.id = "todo-" + todoCounter;
-
-            toDoListDiv.appendChild(labl1);
-            toDoListDiv.appendChild(inpt1);
-            toDoListDiv.appendChild(labl2);
-            toDoListDiv.appendChild(inpt2);
-            toDoListDiv.appendChild(updateBtn);
-            toDoListDiv.appendChild(saveBtn);
-            toDoListDiv.appendChild(deleteBtn);
-
-            const toDoListRoot = document.getElementById("listOfToDo");
-            toDoListRoot.appendChild(toDoListDiv);
-            todoCounter++;
-
-            function deletelistitem() {
-                toDoListRoot.removeChild(toDoListDiv)
-            }
-
-            function updateFunction(){
-                inpt2.readOnly = false;
-            }
-
-            function saveFunction(){
+                const inpt2 = document.createElement("input")
+                inpt2.setAttribute("type", "text");
+                inpt2.setAttribute("name", "contentOfToDo");
+                inpt2.setAttribute("class", "itemContent");
+                inpt2.setAttribute("id", "contentToDo-" + todoCounter);
+                inpt2.setAttribute("value", newTask);
                 inpt2.readOnly = true;
+
+
+                const updateIcon = document.createElement("i");
+                updateIcon.className = "fa-solid fa-pen";
+
+                const updateBtn = document.createElement("button");
+                updateBtn.className = "update-btn";
+                updateBtn.id = "update-btn-" + todoCounter;
+                updateBtn.type = "button";
+                updateBtn.addEventListener("click", updateFunction);
+                updateBtn.appendChild(updateIcon);
+                updateBtn.appendChild(document.createTextNode("Update"));
+
+
+                const icon = document.createElement("i");
+                icon.className = "fa-solid fa-trash";
+
+                const deleteBtn = document.createElement("button");
+                deleteBtn.className = "delete-btn";
+                deleteBtn.id = "delete-btn-" + todoCounter;
+                deleteBtn.type = "button";
+                deleteBtn.addEventListener("click", deletelistitem)
+                deleteBtn.appendChild(icon);
+                deleteBtn.appendChild(document.createTextNode("Delete"));
+
+
+                const toDoList = document.createElement("li");
+                toDoList.className = "toDoList";
+                toDoList.id = "todo-" + todoCounter;
+
+                toDoList.appendChild(labl1);
+                toDoList.appendChild(inpt1);
+                toDoList.appendChild(labl2);
+                toDoList.appendChild(inpt2);
+                toDoList.appendChild(updateBtn);
+                toDoList.appendChild(deleteBtn);
+
+                const toDoListRoot = document.getElementById("listOfToDo");
+                toDoListRoot.appendChild(toDoList);
+                todoCounter++;
+
+                function deletelistitem() {
+                    toDoListRoot.removeChild(toDoList)
+                }
+
+                function updateFunction() {
+                    inpt2.readOnly = false;
+                    updateIcon.className = "fa-solid fa-floppy-disk";
+                    const secondChildNode = updateBtn.childNodes[1];
+                    updateBtn.removeChild(secondChildNode);
+                    updateBtn.appendChild(document.createTextNode("Save"));
+                    updateBtn.removeEventListener("click", updateFunction);
+                    updateBtn.addEventListener("click", saveFunction);
+                }
+
+                function saveFunction() {
+                    inpt2.readOnly = true;
+                    updateIcon.className = "fa-solid fa-pen";
+                    const secondChildNode = updateBtn.childNodes[1];
+                    updateBtn.removeChild(secondChildNode);
+                    updateBtn.appendChild(document.createTextNode("Update"));
+                    updateBtn.removeEventListener("click", saveFunction);
+                    updateBtn.addEventListener("click", updateFunction);
+                }
             }
         }
     </script>
