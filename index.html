@@ -16,7 +16,7 @@
         <input type="text" id="task" name="toDo">
         <button type="button" id="add">+</button>
     </form>
-    
+
     <ol id="listOfToDo">
         <!-- <li class="toDoList" id="toDoListCounter">
             <label for="box"></label>
@@ -35,27 +35,63 @@
         </li> -->
     </ol>
     <script>
-        const listsString = localStorage.lists;
-        let listsObject;
-        if (listsString === undefined) {
-            listsObject = {}
-        } else {
-            listsObject = JSON.parse(listsString);
+        function setCookie(cname, cvalue, exdays) {
+            const d = new Date();
+            d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+            let expires = "expires=" + d.toUTCString();
+            document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
         }
-        const numberOfItemsInLists = Object.keys(listsObject).length;
-        if (numberOfItemsInLists === 0) {
-            localStorage.todoCounter = 0;
+
+        function getCookie(cname) {
+            let name = cname + "=";
+            let decodedCookie = decodeURIComponent(document.cookie);
+            let ca = decodedCookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return "";
         }
-        const arr = Object.keys(listsObject);
-        for (let i = 0; i < numberOfItemsInLists; i++) {
-            addToDo(arr[i]);
+
+        function getAllCookieKeys() {
+            let cookies = document.cookie;
+            if (!cookies) return [];
+
+            return cookies.split(';').map(cookie => cookie.split('=')[0].trim());
         }
-        document.getElementById("add").addEventListener("click", () => addToDo(localStorage.todoCounter));
+
+        function deleteCookie(cname) {
+            document.cookie = `${cname}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        }
+
+
+        let cookieKeys = getAllCookieKeys();
+        let numberOfCookieKey = cookieKeys.length;
+        for (let i = 0; i < numberOfCookieKey; i++) {
+            if (cookieKeys[i] !== "todoCounter") {
+                addToDo(cookieKeys[i]);
+            }
+        }
+        if (!document.cookie) {
+            document.cookie = "todoCounter=0; expires=Thu, 18 Dec 2025 12:00:00 UTC; path=/";
+        }
+
+        document.getElementById("add").addEventListener("click", () => addToDo(getCookie("todoCounter")));
 
         function addToDo(listId) {
             const newTask = document.getElementById("task").value;
-            if ((newTask !== "") || (arr.includes(listId))) {
-                if (localStorage.todoCounter == listId) {
+            if ((newTask !== "") || (cookieKeys.includes(listId))) {
+                let listObject = {};
+                if (cookieKeys.includes(listId)) {
+                    let listString = getCookie(listId);
+                    listObject = JSON.parse(listString);
+                }
+                if (getCookie("todoCounter") == listId) {
                     document.getElementById("task").value = "";
                     newListItem = new Object();
                 }
@@ -69,10 +105,10 @@
                 inpt1.setAttribute("class", "itemCheckbox");
                 inpt1.setAttribute("id", "box-" + listId);
                 inpt1.addEventListener("change", tickBoxControl);
-                if (localStorage.todoCounter == listId) {
+                if (getCookie("todoCounter") == listId) {
                     newListItem.tickBoxStatus = false;
                 } else {
-                    inpt1.checked = listsObject[listId].tickBoxStatus;
+                    inpt1.checked = listObject.tickBoxStatus;
                 }
 
                 const labl2 = document.createElement("label");
@@ -83,13 +119,13 @@
                 inpt2.setAttribute("name", "contentOfToDo");
                 inpt2.setAttribute("class", "itemContent");
                 inpt2.setAttribute("id", "contentToDo-" + listId);
-                if (localStorage.todoCounter == listId) {
+                if (getCookie("todoCounter") == listId) {
                     inpt2.setAttribute("value", newTask);
                 } else {
-                    inpt2.setAttribute("value", listsObject[listId].listContent);
+                    inpt2.setAttribute("value", listObject.listContent);
                 }
 
-                if (localStorage.todoCounter == listId) {
+                if (getCookie("todoCounter") == listId) {
                     newListItem.listContent = inpt2.value;
                     inpt2.readOnly = true;
                 } else {
@@ -98,28 +134,20 @@
 
 
                 const updateIcon = document.createElement("i");
-                if (localStorage.todoCounter == listId) {
-                    updateIcon.className = "fa-solid fa-pen";
-                } else {
-                    updateIcon.className = "fa-solid fa-pen";
-                }
+                updateIcon.className = "fa-solid fa-pen";
 
 
                 const updateBtn = document.createElement("button");
                 updateBtn.className = "update-btn";
                 updateBtn.id = "update-btn-" + listId;
                 updateBtn.type = "button";
-                if (localStorage.todoCounter == listId) {
-                    updateBtn.addEventListener("click", updateFunction);
-                } else {
-                    updateBtn.addEventListener("click", updateFunction);
-                }
+                updateBtn.addEventListener("click", updateFunction);
 
                 updateBtn.appendChild(updateIcon);
-                if (localStorage.todoCounter == listId) {
+                if (getCookie("todoCounter") == listId) {
                     updateBtn.appendChild(document.createTextNode("Update"));
-                    listsObject[listId] = newListItem;
-                    localStorage.lists = JSON.stringify(listsObject);
+                    newListItemString = JSON.stringify(newListItem);
+                    setCookie(listId, newListItemString, 1);
                 } else {
                     updateBtn.appendChild(document.createTextNode("Update"));
                 }
@@ -132,7 +160,7 @@
                 deleteBtn.className = "delete-btn";
                 deleteBtn.id = "delete-btn-" + listId;
                 deleteBtn.type = "button";
-                deleteBtn.addEventListener("click", deletelistitem)
+                deleteBtn.addEventListener("click", deletelistitem);
                 deleteBtn.appendChild(icon);
                 deleteBtn.appendChild(document.createTextNode("Delete"));
 
@@ -150,14 +178,14 @@
 
                 const toDoListRoot = document.getElementById("listOfToDo");
                 toDoListRoot.appendChild(toDoList);
-                if(localStorage.todoCounter == listId){
-                    localStorage.todoCounter++;
+                if (getCookie("todoCounter") == listId) {
+                    let num = Number(getCookie("todoCounter")) + 1;
+                    setCookie("todoCounter", num, 1);
                 }
-                
+
                 function deletelistitem() {
                     toDoListRoot.removeChild(toDoList);
-                    delete listsObject[listId];
-                    localStorage.lists = JSON.stringify(listsObject);
+                    deleteCookie(listId);
                 }
 
                 function updateFunction() {
@@ -179,17 +207,23 @@
                         updateBtn.appendChild(document.createTextNode("Update"));
                         updateBtn.removeEventListener("click", saveFunction);
                         updateBtn.addEventListener("click", updateFunction);
-                        listsObject[listId].listContent = inpt2.value;
-                        localStorage.lists = JSON.stringify(listsObject);
+                        let toDoListItem = getCookie(listId);
+                        toDoListItemOject = JSON.parse(toDoListItem);
+                        toDoListItemOject.listContent = inpt2.value;
+                        toDoListItemString = JSON.stringify(toDoListItemOject);
+                        setCookie(listId, toDoListItemString, 1);
                     } else {
                         alert("Type something to save.");
                     }
                 }
 
                 function tickBoxControl() {
-                    listsObject[listId].tickBoxStatus = !listsObject[listId].tickBoxStatus;
-                    inpt1.checked = listsObject[listId].tickBoxStatus;
-                    localStorage.lists = JSON.stringify(listsObject);
+                    let toDoListItem = getCookie(listId);
+                    toDoListItemOject = JSON.parse(toDoListItem);
+                    toDoListItemOject.tickBoxStatus = !toDoListItemOject.tickBoxStatus;
+                    inpt1.checked = toDoListItemOject.tickBoxStatus;
+                    toDoListItemString = JSON.stringify(toDoListItemOject);
+                    setCookie(listId, toDoListItemString, 1);
                 }
             }
         }
