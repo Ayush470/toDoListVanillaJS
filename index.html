@@ -35,112 +35,93 @@
         </li> -->
     </ol>
     <script>
-        const notesString = localStorage.notes;
-        let notesObject;
-        if (notesString === undefined) {
-            notesObject = {}
+        const listsString = localStorage.lists;
+        let listsObject;
+        if (listsString === undefined) {
+            listsObject = {}
         } else {
-            notesObject = JSON.parse(notesString);
+            listsObject = JSON.parse(listsString);
         }
-        const numberOfNotes = Object.keys(notesObject).length;
-        if (numberOfNotes === 0) {
+        const numberOfItemsInLists = Object.keys(listsObject).length;
+        if (numberOfItemsInLists === 0) {
             localStorage.todoCounter = 0;
         }
-        const arr = Object.keys(notesObject);
-        for (let i = 0; i < numberOfNotes; i++) {
-            console.log(arr[i]);
+        const arr = Object.keys(listsObject);
+        for (let i = 0; i < numberOfItemsInLists; i++) {
             addToDo(arr[i]);
         }
         document.getElementById("add").addEventListener("click", () => addToDo(localStorage.todoCounter));
 
-        function addToDo(noteId) {
+        function addToDo(listId) {
             const newTask = document.getElementById("task").value;
-            if ((newTask !== "" && localStorage.todoCounter == noteId) || (arr.includes(noteId))) {
-                if (localStorage.todoCounter == noteId) {
+            if ((newTask !== "") || (arr.includes(listId))) {
+                if (localStorage.todoCounter == listId) {
                     document.getElementById("task").value = "";
                     newListItem = new Object();
                 }
 
                 const labl1 = document.createElement("label");
-                labl1.setAttribute("for", "box-" + noteId);
+                labl1.setAttribute("for", "box-" + listId);
 
                 const inpt1 = document.createElement("input");
                 inpt1.setAttribute("type", "checkbox");
                 inpt1.setAttribute("name", "toDoListItemCheckbox");
                 inpt1.setAttribute("class", "itemCheckbox");
-                inpt1.setAttribute("id", "box-" + noteId);
+                inpt1.setAttribute("id", "box-" + listId);
                 inpt1.addEventListener("change", tickBoxControl);
-                if (localStorage.todoCounter == noteId) {
+                if (localStorage.todoCounter == listId) {
                     newListItem.tickBoxStatus = false;
                 } else {
-                    inpt1.checked = notesObject[noteId].tickBoxStatus;
+                    inpt1.checked = listsObject[listId].tickBoxStatus;
                 }
 
                 const labl2 = document.createElement("label");
-                labl2.setAttribute("for", "contentToDo-" + noteId);
+                labl2.setAttribute("for", "contentToDo-" + listId);
 
                 const inpt2 = document.createElement("input");
                 inpt2.setAttribute("type", "text");
                 inpt2.setAttribute("name", "contentOfToDo");
                 inpt2.setAttribute("class", "itemContent");
-                inpt2.setAttribute("id", "contentToDo-" + noteId);
-                if (localStorage.todoCounter == noteId) {
+                inpt2.setAttribute("id", "contentToDo-" + listId);
+                if (localStorage.todoCounter == listId) {
                     inpt2.setAttribute("value", newTask);
                 } else {
-                    inpt2.setAttribute("value", notesObject[noteId].noteContent);
+                    inpt2.setAttribute("value", listsObject[listId].listContent);
                 }
 
-                inpt2.addEventListener("input", inputControl);
-                if (localStorage.todoCounter == noteId) {
-                    newListItem.noteContent = inpt2.value;
+                if (localStorage.todoCounter == listId) {
+                    newListItem.listContent = inpt2.value;
                     inpt2.readOnly = true;
                 } else {
-                    if (notesObject[noteId].mode === "update") {
-                        inpt2.readOnly = true;
-                    } else {
-                        inpt2.readOnly = false;
-                    }
+                    inpt2.readOnly = true;
                 }
 
 
                 const updateIcon = document.createElement("i");
-                if (localStorage.todoCounter == noteId) {
+                if (localStorage.todoCounter == listId) {
                     updateIcon.className = "fa-solid fa-pen";
                 } else {
-                    if (notesObject[noteId].mode === "update") {
-                        updateIcon.className = "fa-solid fa-pen";
-                    } else {
-                        updateIcon.className = "fa-solid fa-floppy-disk";
-                    }
+                    updateIcon.className = "fa-solid fa-pen";
                 }
 
 
                 const updateBtn = document.createElement("button");
                 updateBtn.className = "update-btn";
-                updateBtn.id = "update-btn-" + noteId;
+                updateBtn.id = "update-btn-" + listId;
                 updateBtn.type = "button";
-                if (localStorage.todoCounter == noteId) {
+                if (localStorage.todoCounter == listId) {
                     updateBtn.addEventListener("click", updateFunction);
                 } else {
-                    if (notesObject[noteId].mode === "update") {
-                        updateBtn.addEventListener("click", updateFunction);
-                    } else {
-                        updateBtn.addEventListener("click", saveFunction);
-                    }
+                    updateBtn.addEventListener("click", updateFunction);
                 }
 
                 updateBtn.appendChild(updateIcon);
-                if (localStorage.todoCounter == noteId) {
+                if (localStorage.todoCounter == listId) {
                     updateBtn.appendChild(document.createTextNode("Update"));
-                    newListItem.mode = "update";
-                    notesObject[noteId] = newListItem;
-                    localStorage.notes = JSON.stringify(notesObject);
+                    listsObject[listId] = newListItem;
+                    localStorage.lists = JSON.stringify(listsObject);
                 } else {
-                    if (notesObject[noteId].mode === "update") {
-                        updateBtn.appendChild(document.createTextNode("Update"));
-                    } else {
-                        updateBtn.appendChild(document.createTextNode("Save"));
-                    }
+                    updateBtn.appendChild(document.createTextNode("Update"));
                 }
 
 
@@ -149,7 +130,7 @@
 
                 const deleteBtn = document.createElement("button");
                 deleteBtn.className = "delete-btn";
-                deleteBtn.id = "delete-btn-" + noteId;
+                deleteBtn.id = "delete-btn-" + listId;
                 deleteBtn.type = "button";
                 deleteBtn.addEventListener("click", deletelistitem)
                 deleteBtn.appendChild(icon);
@@ -158,7 +139,7 @@
 
                 const toDoList = document.createElement("li");
                 toDoList.className = "toDoList";
-                toDoList.id = "todo-" + noteId;
+                toDoList.id = "todo-" + listId;
 
                 toDoList.appendChild(labl1);
                 toDoList.appendChild(inpt1);
@@ -169,14 +150,14 @@
 
                 const toDoListRoot = document.getElementById("listOfToDo");
                 toDoListRoot.appendChild(toDoList);
-                if(localStorage.todoCounter == noteId){
+                if(localStorage.todoCounter == listId){
                     localStorage.todoCounter++;
                 }
                 
                 function deletelistitem() {
                     toDoListRoot.removeChild(toDoList);
-                    delete notesObject[noteId];
-                    localStorage.notes = JSON.stringify(notesObject);
+                    delete listsObject[listId];
+                    localStorage.lists = JSON.stringify(listsObject);
                 }
 
                 function updateFunction() {
@@ -187,8 +168,6 @@
                     updateBtn.appendChild(document.createTextNode("Save"));
                     updateBtn.removeEventListener("click", updateFunction);
                     updateBtn.addEventListener("click", saveFunction);
-                    notesObject[noteId].mode = "save";
-                    localStorage.notes = JSON.stringify(notesObject);
                 }
 
                 function saveFunction() {
@@ -200,22 +179,17 @@
                         updateBtn.appendChild(document.createTextNode("Update"));
                         updateBtn.removeEventListener("click", saveFunction);
                         updateBtn.addEventListener("click", updateFunction);
-                        notesObject[noteId].mode = "update";
-                        localStorage.notes = JSON.stringify(notesObject);
+                        listsObject[listId].listContent = inpt2.value;
+                        localStorage.lists = JSON.stringify(listsObject);
                     } else {
                         alert("Type something to save.");
                     }
                 }
 
                 function tickBoxControl() {
-                    notesObject[noteId].tickBoxStatus = !notesObject[noteId].tickBoxStatus;
-                    inpt1.checked = notesObject[noteId].tickBoxStatus;
-                    localStorage.notes = JSON.stringify(notesObject);
-                }
-
-                function inputControl() {
-                    notesObject[noteId].noteContent = inpt2.value;
-                    localStorage.notes = JSON.stringify(notesObject);
+                    listsObject[listId].tickBoxStatus = !listsObject[listId].tickBoxStatus;
+                    inpt1.checked = listsObject[listId].tickBoxStatus;
+                    localStorage.lists = JSON.stringify(listsObject);
                 }
             }
         }
