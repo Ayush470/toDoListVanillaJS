@@ -35,65 +35,76 @@
         </li> -->
     </ol>
     <script>
-        function setCookie(cname, cvalue, exdays) {
-            const d = new Date();
-            d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
-            let expires = "expires=" + d.toUTCString();
-            document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+        const cacheName = "todo-cache-v1";
+
+        async function setCache(key, value) {
+            const cache = await caches.open(cacheName);
+            await cache.put(key, new Response(JSON.stringify(value), {
+                headers: { "Content-Type": "application/json" }
+            }));
         }
 
-        function getCookie(cname) {
-            let name = cname + "=";
-            let decodedCookie = decodeURIComponent(document.cookie);
-            let ca = decodedCookie.split(';');
-            for (let i = 0; i < ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) == ' ') {
-                    c = c.substring(1);
-                }
-                if (c.indexOf(name) == 0) {
-                    return c.substring(name.length, c.length);
+        async function getCache(key) {
+            const cache = await caches.open(cacheName);
+            const response = await cache.match(key);
+            return response ? await response.json() : null;
+        }
+
+        async function getAllCacheKeys() {
+            const cache = await caches.open(cacheName);
+            const keys = await cache.keys();
+            return keys.map(request => request.url.split('/').pop());
+        }
+
+        async function initializeCache() {
+            let cacheKeys = await getAllCacheKeys();
+
+            for (let i = 0; i < cacheKeys.length; i++) {
+                if (cacheKeys[i] !== "toDoCounter") {
+                    let listsObject = await getCache(cacheKeys[i]);
+                    if (listsObject) {
+                        let listItemArr = Object.keys(listsObject);
+                        for (let i = 0; i < listItemArr.length; i++) {
+                            listToDo(listItemArr[i], listsObject);
+                        }
+                    } else{
+                        await setCache("toDoCounter", 0);
+                    }
                 }
             }
-            return "";
-        }
 
-        function getAllCookieKeys() {
-            let cookies = document.cookie;
-            if (!cookies) return [];
-
-            return cookies.split(';').map(cookie => cookie.split('=')[0].trim());
-        }
-
-        function deleteCookie(cname) {
-            document.cookie = `${cname}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-        }
-
-
-        let cookieKeys = getAllCookieKeys();
-        let numberOfCookieKey = cookieKeys.length;
-        for (let i = 0; i < numberOfCookieKey; i++) {
-            if (cookieKeys[i] !== "todoCounter") {
-                addToDo(cookieKeys[i]);
+            let toDoCounter = await getCache("toDoCounter");
+            if (toDoCounter === null) {
+                await setCache("toDoCounter", 0);
             }
         }
-        if (!document.cookie) {
-            document.cookie = "todoCounter=0; expires=Thu, 18 Dec 2025 12:00:00 UTC; path=/";
+
+        async function addToDo(id, data) {
+            let lists = await getCache("lists") || {};
+            lists[id] = data;
+            await setCache("lists", lists);
         }
 
-        document.getElementById("add").addEventListener("click", () => addToDo(getCookie("todoCounter")));
+        async function removeToDo(id) {
+            let lists = await getCache("lists") || {};
+            delete lists[id];
+            await setCache("lists", lists);
+        }
 
-        function addToDo(listId) {
+        initializeCache();
+
+        document.getElementById("add").addEventListener("click", async () => {
+            const counter = await getCache("toDoCounter"); 
+            listToDo(counter, {}); 
+        });
+
+        async function listToDo(listId, listsObject) {
             const newTask = document.getElementById("task").value;
-            if ((newTask !== "") || (cookieKeys.includes(listId))) {
-                let listObject = {};
-                if (cookieKeys.includes(listId)) {
-                    let listString = getCookie(listId);
-                    listObject = JSON.parse(listString);
-                }
-                if (getCookie("todoCounter") == listId) {
+            let newListItem = new Object();
+            let listIdComp = await getCache("toDoCounter");
+            if ((newTask !== "") || (listsObject.hasOwnProperty(listId))) {
+                if (listIdComp == listId) {
                     document.getElementById("task").value = "";
-                    newListItem = new Object();
                 }
 
                 const labl1 = document.createElement("label");
@@ -105,10 +116,10 @@
                 inpt1.setAttribute("class", "itemCheckbox");
                 inpt1.setAttribute("id", "box-" + listId);
                 inpt1.addEventListener("change", tickBoxControl);
-                if (getCookie("todoCounter") == listId) {
+                if (listIdComp == listId) {
                     newListItem.tickBoxStatus = false;
                 } else {
-                    inpt1.checked = listObject.tickBoxStatus;
+                    inpt1.checked = listsObject[listId].tickBoxStatus;
                 }
 
                 const labl2 = document.createElement("label");
@@ -119,13 +130,13 @@
                 inpt2.setAttribute("name", "contentOfToDo");
                 inpt2.setAttribute("class", "itemContent");
                 inpt2.setAttribute("id", "contentToDo-" + listId);
-                if (getCookie("todoCounter") == listId) {
+                if (listIdComp == listId) {
                     inpt2.setAttribute("value", newTask);
                 } else {
-                    inpt2.setAttribute("value", listObject.listContent);
+                    inpt2.setAttribute("value", listsObject[listId].listContent);
                 }
 
-                if (getCookie("todoCounter") == listId) {
+                if (listIdComp == listId) {
                     newListItem.listContent = inpt2.value;
                     inpt2.readOnly = true;
                 } else {
@@ -144,10 +155,9 @@
                 updateBtn.addEventListener("click", updateFunction);
 
                 updateBtn.appendChild(updateIcon);
-                if (getCookie("todoCounter") == listId) {
+                if (listIdComp == listId) {
                     updateBtn.appendChild(document.createTextNode("Update"));
-                    newListItemString = JSON.stringify(newListItem);
-                    setCookie(listId, newListItemString, 1);
+                    await addToDo(listId, newListItem);
                 } else {
                     updateBtn.appendChild(document.createTextNode("Update"));
                 }
@@ -178,14 +188,14 @@
 
                 const toDoListRoot = document.getElementById("listOfToDo");
                 toDoListRoot.appendChild(toDoList);
-                if (getCookie("todoCounter") == listId) {
-                    let num = Number(getCookie("todoCounter")) + 1;
-                    setCookie("todoCounter", num, 1);
+                if (listIdComp == listId) {
+                    let num = Number(listIdComp) + 1;
+                    await setCache("toDoCounter", num);
                 }
 
-                function deletelistitem() {
+                async function deletelistitem() {
                     toDoListRoot.removeChild(toDoList);
-                    deleteCookie(listId);
+                    await removeToDo(listId);
                 }
 
                 function updateFunction() {
@@ -198,7 +208,7 @@
                     updateBtn.addEventListener("click", saveFunction);
                 }
 
-                function saveFunction() {
+                async function saveFunction() {
                     if (inpt2.value !== "") {
                         inpt2.readOnly = true;
                         updateIcon.className = "fa-solid fa-pen";
@@ -207,24 +217,20 @@
                         updateBtn.appendChild(document.createTextNode("Update"));
                         updateBtn.removeEventListener("click", saveFunction);
                         updateBtn.addEventListener("click", updateFunction);
-                        let toDoListItem = getCookie(listId);
-                        toDoListItemOject = JSON.parse(toDoListItem);
-                        toDoListItemOject.listContent = inpt2.value;
-                        toDoListItemString = JSON.stringify(toDoListItemOject);
-                        setCookie(listId, toDoListItemString, 1);
+                        listsObject[listId].listContent = inpt2.value;
+                        await setCache("lists", listsObject);
                     } else {
                         alert("Type something to save.");
                     }
                 }
 
-                function tickBoxControl() {
-                    let toDoListItem = getCookie(listId);
-                    toDoListItemOject = JSON.parse(toDoListItem);
-                    toDoListItemOject.tickBoxStatus = !toDoListItemOject.tickBoxStatus;
-                    inpt1.checked = toDoListItemOject.tickBoxStatus;
-                    toDoListItemString = JSON.stringify(toDoListItemOject);
-                    setCookie(listId, toDoListItemString, 1);
+                async function tickBoxControl() {
+                    listsObject[listId].tickBoxStatus = !listsObject[listId].tickBoxStatus;
+                    inpt1.checked = listsObject[listId].tickBoxStatus;
+                    await setCache("lists", listsObject);
                 }
+            } else {
+                alert("Input field is empty!");
             }
         }
     </script>
